@@ -1,0 +1,106 @@
+name: Bug report
+description: Report a reproducible problem with Nuvio Lite on a Samsung TV
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. This is an **unofficial community project** — please do not file this with NuvioMedia.
+        Focus, playback and install bugs are very hard to fix without device details, so please fill everything in.
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: Settings → Data & About
+      placeholder: "1.0.19"
+    validations:
+      required: true
+
+  - type: input
+    id: tv-model
+    attributes:
+      label: TV model
+      placeholder: "Samsung UA55MU7000"
+    validations:
+      required: true
+
+  - type: input
+    id: tizen-version
+    attributes:
+      label: Tizen / firmware version
+      placeholder: "Tizen 3.0, firmware 1490"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install method
+      options:
+        - Release WGT via sdb
+        - Local build via sdb
+        - npm run install:tv
+        - Other (explain below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Home
+        2. Focus the third poster in "Popular · Cinemeta"
+        3. Press Down
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      options:
+        - Always
+        - Sometimes
+        - Once
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Required for crashes, black screens, install and playback failures.
+      render: shell
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or video
+      description: Drag images here. Required for visual and focus bugs.
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for this problem.
+          required: true
+        - label: This is not a request for content, addons, or credentials.
+          required: true

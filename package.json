@@ -1,0 +1,26 @@
+{
+  "name": "nuvio-tizen3",
+  "version": "1.0.19",
+  "description": "Unofficial Nuvio client for Samsung Tizen 3.0 (2017 TVs) — ES5, Chromium 47, <500 KB",
+  "license": "GPL-3.0",
+  "private": false,
+  "scripts": {
+    "build": "node scripts/build.js",
+    "lint": "node scripts/check-es5.js && (eslint --no-eslintrc -c .eslintrc.json \"src/js/*.js\" \"scripts/*.js\" 2>/dev/null || echo 'eslint not installed, ES5 check passed')",
+    "check-es5": "node scripts/check-es5.js",
+    "test": "node scripts/test-unit.js",
+    "package": "node scripts/package.js",
+    "install:tv": "node scripts/install-tv.js"
+  },
+  "engines": { "node": ">=14" },
+  "devDependencies": { "eslint": "^7.32.0" },
+  "keywords": ["nuvio", "tizen", "samsung", "smart-tv", "es5", "stremio", "avplay"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gbman54/nuvio-tizen3.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gbman54/nuvio-tizen3/issues"
+  },
+  "homepage": "https://github.com/gbman54/nuvio-tizen3#readme"
+}

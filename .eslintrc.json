@@ -1,0 +1,16 @@
+{
+  "env": { "browser": true, "es6": false },
+  "parserOptions": { "ecmaVersion": 5 },
+  "rules": {
+    "no-arrow-function": 2,
+    "no-template-curly-in-string": 2,
+    "prefer-const": 0,
+    "no-restricted-syntax": [
+      "error",
+      { "selector": "ArrowFunctionExpression", "message": "ES5 only" },
+      { "selector": "TemplateLiteral", "message": "ES5 only" },
+      { "selector": "ClassDeclaration", "message": "ES5 only" },
+      { "selector": "SpreadElement", "message": "ES5 only" }
+    ]
+  }
+}

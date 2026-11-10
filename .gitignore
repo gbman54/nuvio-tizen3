@@ -1,0 +1,36 @@
+# ---- Build output ----
+build-out/
+dist/
+*.wgt
+*.tpk
+*.ipk
+*.apk
+
+# ---- Signing material: NEVER commit ----
+certs/
+*.p12
+*.pfx
+*.key
+*.cer
+*.pem
+*.jks
+*.keystore
+tizen-studio-data/
+
+# ---- Dependencies ----
+node_modules/
+
+# ---- Local / OS ----
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.env
+.env.*
+local.properties
+
+# ---- Editors ----
+.vscode/
+.idea/
+*.swp
+*~

@@ -1,0 +1,62 @@
+name: Feature request
+description: Suggest an improvement that respects Tizen 3.0 / Chromium 47 limits
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project targets **Chromium 47**. Proposals that need `fetch`, `async/await`, CSS grid,
+        WebAssembly or Web Workers cannot be implemented on this hardware.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user-visible problem, not the implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Navigation / focus
+        - Playback / AVPlay
+        - Audio or subtitle tracks
+        - Addons / Stremio
+        - Scrapers / plugins
+        - Settings / localization
+        - Packaging / install
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility notes
+      description: Does this require any API, CSS property, or memory that Chromium 47 may not have?
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: This is not a request for media content, addons, or credentials.
+          required: true

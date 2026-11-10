@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="nuvio12345" version="1.0.19" viewmodes="fullscreen">
+    <access origin="*" subdomains="true"></access>
+    <tizen:application id="nuvio12345.nuviolite" package="nuvio12345" required_version="3.0"/>
+    <author href="http://nuvio.app" email="dev@nuvio.local">Nuvio</author>
+    <content src="index.html"/>
+    <description>Nuvio Lite - lightweight media app for Tizen 3.0 TVs</description>
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <icon src="icon_launcher.png"/>
+    <tizen:metadata key="http://tizen.org/metadata/app_ui_type/base_screen_resolution" value="fullscreen"/>
+    <name>Nuvio Lite</name>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.read"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.write"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/avplay"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/productinfo"/>
+    <tizen:profile name="tv"/>
+    <tizen:setting screen-orientation="auto-rotation" context-menu="enable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
+</widget>

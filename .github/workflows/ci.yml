@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: ES5 gate, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: ES5 syntax gate
+        run: node scripts/check-es5.js
+
+      - name: Unit tests
+        run: node scripts/test-unit.js
+
+      - name: Build and size report
+        run: node scripts/build.js
