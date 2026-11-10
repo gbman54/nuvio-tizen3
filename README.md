@@ -65,66 +65,215 @@ Nuvio Lite is a from-scratch client for that hardware:
 
 Other 2017 models on the same Tizen 3.0 firmware should work. Tizen 2.3/2.4 (2015–2016) is **not** supported — the app needs `webapis.avplay` and modern-enough DOM primitives.
 
-## Install
+## Install with the Tizen CLI
 
-### From a release (recommended)
+Everything is done from a terminal over the network — no USB stick and no Tizen Studio IDE. Commands are Linux/macOS; on Windows use the `.exe` installer, the same `tizen`/`sdb` commands, and replace `$HOME` with `%USERPROFILE%`.
 
-1. On the TV: **Settings → General → System Manager → Other Settings → Developer Mode = ON**, set *Host PC IP* to your computer's LAN address, then reboot the TV.
-2. Download the latest `.wgt` from [Releases](../../releases).
-3. Install with Tizen Studio's `sdb` (retail firmware restricts normal shell commands):
+**What you need**
+
+| | Link |
+|---|---|
+| Tizen Studio / Tizen SDK 10.0 | [Download page](https://samsungtizenos.com/tools-download/) |
+| Node.js ≥ 14 | [nodejs.org](https://nodejs.org/en/download) |
+| Git | [git-scm.com](https://git-scm.com/downloads) |
+| TV developer mode | [TV Device — Samsung Developer](https://developer.samsung.com/smarttv/develop/getting-started/using-sdk/tv-device.html) |
+
+### 1. Enable Developer Mode on the TV
+
+On the TV:
+
+1. **Settings → General → System Manager → Other Settings → Developer Mode = ON**
+2. Set **Host PC IP** to this computer's LAN address (`hostname -I` on Linux, `ipconfig` on Windows).
+3. **Reboot the TV** (developer mode does not activate until it restarts).
+
+Confirm the TV is listening:
+
+```bash
+curl http://<TV_IP>:8001/api/v2/
+```
+
+The JSON must contain `"developerMode":"1"` and your PC's IP in `developerIP`.
+
+### 2. Install the Tizen Studio CLI
+
+Download the **web CLI installer** for your OS:
+
+| OS | Direct download |
+|---|---|
+| Linux | [`web-cli_Tizen_SDK_10.0_ubuntu-64.bin`](https://download.tizen.org/sdk/Installer/tizen-sdk_10.0/web-cli_Tizen_SDK_10.0_ubuntu-64.bin) |
+| macOS | [`web-cli_Tizen_SDK_10.0_macos-64.bin`](https://download.tizen.org/sdk/Installer/tizen-sdk_10.0/web-cli_Tizen_SDK_10.0_macos-64.bin) |
+| Windows | [`web-cli_Tizen_SDK_10.0_windows-64.exe`](https://download.tizen.org/sdk/Installer/tizen-sdk_10.0/web-cli_Tizen_SDK_10.0_windows-64.exe) |
+
+Linux/macOS (use the matching filename on macOS):
+
+```bash
+chmod +x web-cli_Tizen_SDK_10.0_ubuntu-64.bin
+./web-cli_Tizen_SDK_10.0_ubuntu-64.bin
+```
+
+Accept the licence and keep the default install path (`$HOME/tizen-studio`). If you prefer a fully offline installer, use `Baseline_Tizen_SDK_10.0_ubuntu-64.bin` from the same [directory](https://download.tizen.org/sdk/Installer/tizen-sdk_10.0/).
+
+Add the CLI tools to your `PATH` (put this line in `~/.bashrc` or `~/.zshrc` to keep it):
+
+```bash
+export PATH="$HOME/tizen-studio/tools/ide/bin:$HOME/tizen-studio/tools:$PATH"
+```
+
+Check both tools are visible:
+
+```bash
+tizen version     # e.g. Tizen CLI 2.5.25
+sdb version       # e.g. Smart Development Bridge version 4.2.36
+```
+
+Reference: [CLI commands](https://samsungtizenos.com/docs/sdk-tools/dotnet/vscode/baseline-sdk/common-tools/command-line-interface) and [SDB](https://samsungtizenos.com/docs/sdk-tools/dotnet/vscode/baseline-sdk/common-tools/smart-development-bridge).
+
+### 3. Connect to the TV
 
 ```bash
 sdb connect <TV_IP>:26101
-sdb -s <TV_IP>:26101 push "Nuvio Lite.wgt" /home/owner/share/tmp/sdk_tools/tmp/nuvio.wgt
-sdb -s <TV_IP>:26101 shell 0 vd_appinstall nuvio12345.nuviolite /home/owner/share/tmp/sdk_tools/tmp/nuvio.wgt
-tizen run -p nuvio12345.nuviolite -s <TV_IP>:26101
+sdb devices
 ```
 
-Or use the helper:
+You should see:
+
+```
+List of devices attached
+192.168.1.50:26101     device          UA55MU7000
+```
+
+If `sdb devices` is empty:
 
 ```bash
-npm run install:tv -- --ip=<TV_IP> --wgt="Nuvio Lite.wgt"
+sdb kill-server
+sdb start-server
+sdb connect <TV_IP>:26101
+sdb connect <TV_IP>:26101      # the first attempt after a TV reboot often fails
 ```
 
-> **Signing:** release builds are signed with the **Tizen public distributor** profile. On this firmware a Samsung author/distributor chain is rejected (`install failed[118]`, stalls at `installing[22]`) even for a 5 KB test app, while the public distributor installs fine. The `VD_APPINSTALL` path above is the only working install route on retail TVs.
+### 4. Create a signing profile
 
-### Build and install from source
+Tizen widgets must be signed. On 2017 retail firmware a Samsung author/distributor chain is rejected at install (`install failed[118]`, stalls around `installing[22]`) even for a 5 KB test app. Sign with the **public distributor** that ships with Tizen Studio instead.
 
-Requirements: Node.js ≥ 14, Tizen Studio CLI (`tizen`, `sdb`), and a signing profile.
+```bash
+# The author alias MUST be exactly 10 characters on Tizen 3.0.
+# Shorter app-id prefixes are rejected by the TV.
+export AUTHOR_ID=nuvio12345
+export NUVIO_CERT_PASS='choose-a-local-password'
+
+# 1) Author certificate (stored in ~/tizen-studio-data/keystore/author/)
+#    Skip this command if "$HOME/tizen-studio-data/keystore/author/$AUTHOR_ID.p12" already exists.
+tizen certificate \
+  -a "$AUTHOR_ID" -p "$NUVIO_CERT_PASS" \
+  -c US -s California -ct "Los Angeles" \
+  -o Nuvio -u Dev -n "Nuvio Lite" \
+  -e dev@example.com -f "$AUTHOR_ID"
+
+# 2) Signing profile using the SDK's public distributor
+SDK="$HOME/tizen-studio/tools/certificate-generator/certificates/distributor/sdk-public"
+
+tizen security-profiles add \
+  -n NuvioTV -A \
+  -a "$HOME/tizen-studio-data/keystore/author/$AUTHOR_ID.p12" -p "$NUVIO_CERT_PASS" \
+  -c "$SDK/tizen-distributor-ca.cer" \
+  -d "$SDK/tizen-distributor-signer.p12" \
+  -dp tizenpkcs12passfordsigner
+```
+
+Verify the profile exists and is active:
+
+```bash
+tizen security-profiles list
+```
+
+Reference: [Working with the certificate profile](https://samsungtizenos.com/docs/sdk-tools/dotnet/vscode/baseline-sdk/common-tools/certificate-registration).
+
+> The password only protects a local development certificate. Do not reuse a real password, and never commit `~/tizen-studio-data/keystore/` or `certs/`.
+
+### 5. Clone and verify the source
 
 ```bash
 git clone https://github.com/gbman54/nuvio-tizen3.git
 cd nuvio-tizen3
+npm run check-es5     # ES5 gate — must pass before anything is packaged
+npm test              # unit tests
+npm run build         # required files + version parity + size report
+```
 
-npm run check-es5      # ES5 gate — must pass
-npm test               # unit tests
-npm run build          # size report
+### 6. Package the WGT
 
-# Stage only what belongs in the widget
+Only these files belong inside the widget. `build-out/` is git-ignored.
+
+```bash
+rm -rf build-out
 mkdir -p build-out
 cp index.html config.xml icon.png icon_launcher.png build-out/
 cp -r src assets build-out/
 
-tizen package -t wgt -s <PROFILE> -- build-out
+tizen package -t wgt -s NuvioTV -- build-out
 ```
 
-Creating the public-distributor profile (the author alias **must be 10 characters**; shorter app-id prefixes are rejected by the TV):
+Expected output:
+
+```
+Package File Location: /path/to/nuvio-tizen3/build-out/Nuvio Lite.wgt
+```
+
+> Bump the version in **both** `config.xml` and the About string in `src/js/09-views.js` for every reinstall — `npm run build` fails if they disagree, and the TV caches the widget by version.
+
+### 7. Install and launch
+
+Retail TVs disable the normal install commands. Push the WGT to the TV's shared folder, then install it with the whitelisted `vd_appinstall` command:
 
 ```bash
-export AUTHOR_ID=nuvio12345
-export NUVIO_CERT_PASS='<your-password>'
+WGT="$PWD/build-out/Nuvio Lite.wgt"
+REMOTE=/home/owner/share/tmp/sdk_tools/tmp/nuvio.wgt
 
-tizen certificate -a $AUTHOR_ID -p "$NUVIO_CERT_PASS" -c US -s California \
-  -ct "Los Angeles" -o Nuvio -u Dev -n "Nuvio Lite" -e dev@example.com -f $AUTHOR_ID
-
-SDK=~/tizen-studio/tools/certificate-generator/certificates/distributor/sdk-public
-tizen security-profiles add -n NuvioTV \
-  -a ~/tizen-studio-data/keystore/author/$AUTHOR_ID.p12 -p "$NUVIO_CERT_PASS" \
-  -c "$SDK/tizen-distributor-ca.cer" -d "$SDK/tizen-distributor-signer.p12" \
-  -dp tizenpkcs12passfordsigner
+sdb -s <TV_IP>:26101 push "$WGT" "$REMOTE"
+sdb -s <TV_IP>:26101 shell 0 vd_appinstall nuvio12345.nuviolite "$REMOTE"
+tizen run -p nuvio12345.nuviolite -s <TV_IP>:26101
 ```
 
-Then run `node scripts/setup-tv.js --ip=<TV_IP>` to do certificate → package → install → launch in one step.
+The app appears in the TV's Apps list as **Nuvio Lite**.
+
+If you downloaded a prebuilt release instead of building, skip steps 4–6 and run the same four commands with the downloaded `.wgt`.
+
+### 8. Update, uninstall, inspect
+
+```bash
+# Reinstall a new build (bump config.xml + About first)
+sdb -s <TV_IP>:26101 push "$WGT" "$REMOTE"
+sdb -s <TV_IP>:26101 shell 0 vd_appinstall nuvio12345.nuviolite "$REMOTE"
+tizen run -p nuvio12345.nuviolite -s <TV_IP>:26101
+
+# Installed apps
+sdb -s <TV_IP>:26101 shell 0 applist
+
+# Uninstall
+sdb -s <TV_IP>:26101 shell 0 vd_appuninstall nuvio12345.nuviolite
+
+# Device id (useful when reporting install problems)
+sdb -s <TV_IP>:26101 shell 0 getduid
+```
+
+`tizen run` prints `Tizen application is successfully launched.` when it worked. To read the JS console, use Tizen Studio's **Log View**, or on firmware that allows it:
+
+```bash
+sdb -s <TV_IP>:26101 shell 0 dlogutil | grep -i nuvio
+```
+
+### One-command helpers
+
+If you already have a certificate profile, these wrap the steps above:
+
+```bash
+# Build → package → install → launch
+NUVIO_CERT_PASS='choose-a-local-password' \
+  node scripts/setup-tv.js --ip=<TV_IP> --profile=NuvioTV
+
+# Install an existing (for example, downloaded) WGT
+node scripts/install-tv.js --ip=<TV_IP> --wgt="Nuvio Lite.wgt"
+```
 
 ## First run
 
@@ -157,7 +306,7 @@ src/js/10-player.js       AVPlay + HTML5, OSD, tracks, app-rendered subtitles
 src/js/11-trakt.js        Optional Trakt device-code sync
 src/js/12-app.js          Key handling, stage scaling, Tizen keys, bootstrap
 src/js/13-plugins.js      Scraper runtime: sandbox, transform, shims, repo manager
-scripts/                  check-es5, build, package, install-tv
+scripts/                  check-es5, build, package, install-tv, setup-tv
 docs/                     Screenshots and notes
 ```
 
@@ -195,13 +344,19 @@ The TV's Chromium 47 predates most of ES2015. `scripts/check-es5.js` parses ever
 
 ## Troubleshooting
 
-| Symptom | Fix |
+| Symptom | Cause / fix |
 |---|---|
-| `sdb: serial number wrong` | `sdb kill-server && sdb start-server`, then `sdb connect <TV_IP>:26101` two or three times |
-| `install failed[118]` | Stop at 22% means the certificate chain was rejected — use the public distributor profile |
+| `tizen: command not found` | Add the CLI to `PATH`: `export PATH="$HOME/tizen-studio/tools/ide/bin:$HOME/tizen-studio/tools:$PATH"` |
+| `sdb devices` is empty | Developer Mode is off, the TV was not rebooted, or the Host PC IP is wrong. Check `curl http://<TV_IP>:8001/api/v2/`, then `sdb kill-server && sdb start-server` and `sdb connect` again |
+| `sdb: serial number wrong` | `sdb kill-server && sdb start-server`, then connect two or three times |
 | `sdb shell` prints `closed` | Expected on retail firmware; only `shell 0 <whitelisted-command>` works |
-| Black screen on launch | Check the JS console with `sdb shell 0 wascmd ...`; the ES5 gate should have caught syntax errors |
-| Launcher icon still a blue tile | Reboot the TV once; Tizen caches launcher icons aggressively |
+| `install failed[118]` | Stops at 22% when the certificate chain is rejected — sign with the public distributor profile (step 4) |
+| `install failed[-1]` / already installed | Uninstall first, or bump the version in `config.xml` and `src/js/09-views.js` |
+| `tizen package` says the profile is missing | `tizen security-profiles list`, then pass the exact name with `-s` |
+| App launches an old build | The version was not bumped; the TV caches widgets by version. Bump both version strings and reinstall |
+| `tizen run` fails but the app is listed | `sdb shell 0 applist` to confirm the app id, then launch it from the TV's Apps screen |
+| Black screen on launch | ES5 gate should prevent this; read the console with Tizen Studio **Log View** or `sdb shell 0 dlogutil` |
+| Launcher icon is still a blue tile | Reboot the TV once; Tizen caches launcher icons aggressively |
 | Provider fails | Plugins → Plugin Test with a numeric TMDB ID; it shows the exact error and timing |
 
 ## Contributing
